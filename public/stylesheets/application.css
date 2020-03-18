@@ -1,10 +1,43 @@
-.actions {
-  
-  text-align: right;
+body {
+  font-family: sans-serif;
+  padding: 1em;
   font-size: 20px;
 }
 
-main {
-  font-family: Arial;
+header h1 {
+  font-size: 30px;
+}
+
+header .actions {
+  text-align: right;
+}
+
+a.signin {
   font-size: 20px;
+  text-align: right;
+}
+
+a.signup {
+  font-size: 20px;
+  text-align: right;
+}
+
+
+.success {
+  background: yellow;
+  padding: 10px 20px;
+}
+
+.error {
+  background: yellow;
+  padding: 10px 20px;
+}
+
+form.inline {
+  display: inline;
+}
+
+.user-status {
+  font-style: italic;
+  font-size: 1em;
 }

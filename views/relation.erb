@@ -1,0 +1,9 @@
+<p>You have # contacts:</p>
+<% @contacts.each do |contact| %>
+  <% next if contact[:relation] != @relation %>
+  <ul>
+    <li>
+      <a href=/contacts/<%= contact[:id] %>><%= contact[:firstname]%> <%= contact[:lastname]%></a>
+    </li>
+  </ul>
+<% end %>

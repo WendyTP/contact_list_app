@@ -27,5 +27,29 @@ class ContactTest < MiniTest::Test
     assert_includes(last_response.body, "Family")
   end
 
+  def test_view_contacts
+    get "/contacts"
+    assert_equal(200, last_response.status)
+    assert_includes(last_response.body, %q(<a href=/contacts/1>Amy Smith))
+  end
+
+
+  def test_view_individual_category_contacts
+    get "/Family"
+    assert_equal(200, last_response.status)
+    #assert_includes(last_response.body,  %q(<a href=/contacts/1>Amy Smith))
+    
+  end
+
+
+  def test_view_single_contact
+    get "/contacts/:id"
+    
+    #assert_equal(200, last_response.status)
+    #assert_includes(last_response.body, "First Name:")
+    #assert_includes(last_response.body, "Amy")
+  end
+
+  
 
 end
