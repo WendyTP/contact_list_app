@@ -24,6 +24,11 @@ def load_contact(contact_id)
   redirect "/contacts"
 end
 
+def next_contact_id(contacts)
+  max_contact_id = contacts.map{ |contact| contact[:id]}.max || 0
+  max_contact_id + 1
+end
+
 
 get "/" do
   erb :home, layout: :layout
@@ -31,11 +36,6 @@ end
 
 # view all the contacts
 get "/contacts" do
-
-  session[:contacts] << {id: 1, firstname: "Amy", lastname: "Smith", phone: "123456789", email: "example@", relation: "Family"}
-  session[:contacts] << {id: 2, firstname: "John", lastname: "Smith", phone: "123456789", email: "example@", relation: "Friends"}
-  session[:contacts] << {id: 3, firstname: "Ben", lastname: "Smith", phone: "123456789", email: "example@", relation: "Family"}
- 
   @contacts = session[:contacts]
 
   erb :contacts, layout: :layout
@@ -49,10 +49,25 @@ get "/:relation" do
   erb :relation, layout: :layout
 end
 
-# add new contact
+# render new contact form
 get "/contacts/new" do
   @relations = CONTACT_CATEGORIES
   erb :new_contact, layout: :layout
+end
+
+# submit new contact form
+post "/contacts" do
+  firstname = params[:firstname].strip
+  lastname = params[:lastname].strip
+  phone = params[:phone].strip
+  email = params[:email].strip
+  relation = params[:relation]
+  # user input validation 
+  # no same first name + last name contact
+  id = next_contact_id(session[:contacts])
+  session[:contacts] << {id: id, firstname: firstname, lastname: lastname, phone: phone, email: email, relation: relation}
+  session[:success] = "The contact has been added."
+  redirect "/"
 end
 
 # view single contact

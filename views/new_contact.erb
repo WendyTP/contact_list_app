@@ -1,5 +1,5 @@
 <p>Enter the new contact information:</p>
-<form action="/contacts/new" method="post">
+<form action="/contacts" method="post">
   <fieldset>
     <div>
       <label for="firstname">First Name:
@@ -13,17 +13,17 @@
     </div></br>
       <div>
       <label for="phone">Phone Number:
-        <input name="phone" placeholder= "ex. 123456789" type="text" value="<%= params[:phone] %>">
+        <input name="phone" placeholder= "ex. 123456789" type="tel" value="<%= params[:phone] %>">
       </label>
     </div></br>
       <div>
       <label for="email">Email:
-        <input name="email" placeholder= "ex. 123@example.com" type="text" value="<%= params[:email] %>">
+        <input name="email" placeholder= "ex. 123@example.com" type="email" value="<%= params[:email] %>">
       </label>
     </div></br>
       <div>
       <label for="relation">Relation:
-        <select name="relations">
+        <select name="relation">
           <% @relations.each do |relation| %>
             <option value="<%= relation %>"><%= relation %></option>
           <% end %>
