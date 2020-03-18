@@ -1,0 +1,16 @@
+
+<h4><a href="/contacts">All Contacts</a></h4>
+<ul>
+  
+  <% CONTACT_CATEGORIES.each do |relation| %>
+    <li><em><a href="/<%= relation %>"><%= relation %></a></em></li>
+  <% end %>
+</ul></br>
+
+<a href="/contacts/new">Add Contact</a>
+
+
+<% content_for :header_links do %>
+  <a href=#>Sign in</a>
+  <a href=#>Sign up</a>
+<% end %>
