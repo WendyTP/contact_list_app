@@ -15,10 +15,6 @@ before do
   session[:contacts] ||= []
 end
 
-helpers do
-  # something
-end
-
 def load_contact(contact_id)
   contact = session[:contacts].find { |contact| contact[:id] == contact_id }
   return contact if contact
@@ -53,6 +49,12 @@ get "/:relation" do
   erb :relation, layout: :layout
 end
 
+# add new contact
+get "/contacts/new" do
+  @relations = CONTACT_CATEGORIES
+  erb :new_contact, layout: :layout
+end
+
 # view single contact
 get "/contacts/:id" do
   contact_id = params[:id].to_i
@@ -60,4 +62,6 @@ get "/contacts/:id" do
 
   erb :individual_contact, layout: :layout
 end
+
+
 
