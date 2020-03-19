@@ -1,0 +1,28 @@
+<p>Please sign up:</p>
+<form action="/users/signup" method = "post">
+  <fieldset>
+    <div>
+      <p class="small">Username shoudld be between 5 to 20 characters (alphabets, digits and underscore), and dose not include space characters.</p>
+      <label for="username">Username:
+        <input name ="username", type="text", value=<%= params[:username] %>>
+      </label></br></br>
+    </div>
+    <div>
+       <p class="small">Password shoudld be between 5 to 20 characters (alphabets, digits and underscore), and dose not include space characters.</p>
+      <label for="password">Password:
+        <input name="password", type="password">
+      </label></br></br>
+    <div>
+
+    <div>
+    <label for="reconfirmed_password">Re-confirm Password:
+      <input name="reconfirmed_password" type="password">
+    </label></br></br>
+    </div>
+
+    <button type="submit">Submit</button>
+  </fieldset>
+  <a href="/">Cancel</a>
+
+
+</form>

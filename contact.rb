@@ -2,6 +2,8 @@ require "sinatra"
 require "sinatra/reloader"
 require "sinatra/content_for"
 require "tilt/erubis"
+require "yaml"
+require "bcrypt"
 
 
 CONTACT_CATEGORIES = [ "Family", "Colleagues", "Friends", "Acquaintances" ]
@@ -15,12 +17,69 @@ before do
   session[:contacts] ||= []
 end
 
+helpers do
+  def count_contacts(relation=nil)
+    if relation
+      session[:contacts].select{ |contact| contact[:relation] == relation}.count
+    else
+      session[:contacts].count
+    end
+  end
+end
+
+def user_credentials_path
+  file_path = File.expand_path("../users.yml", __FILE__)
+end
+
+def load_user_credentials
+  file_path = user_credentials_path
+  YAML.load_file(file_path)
+end
+
+def correct_password?(encrypted_password, password)
+  BCrypt::Password.new(encrypted_password) == password
+end
+
+def invalid_user_credentials(username, password)
+  user_credentials = load_user_credentials
+  stored_password = user_credentials[username]
+  unless user_credentials.keys.include?(username) && correct_password?(stored_password, password)
+    "Invalid user credentials."
+  end
+end
+
+def store_user_credentials(username, password)
+  user_credentials = load_user_credentials
+  user_credentials[username] = password
+  users_yaml = user_credentials.to_yaml
+  File.write(user_credentials_path, users_yaml)
+end
+
+def invalid_username(username)
+  user_credentials = load_user_credentials
+  if user_credentials.has_key?(username)
+    "Username already exisit."
+  elsif !username.match?(/\A\w{5,20}\z/)
+    "Invalid username."
+  end
+end
+
+def invalid_password(password, reconfirmed_password)
+  if !password.match?((/\A\w{5,20}\z/)) || password != reconfirmed_password
+    "Invalid password."
+  end
+end
+
+def hash_password(password)
+  BCrypt::Password.create(password).to_s
+end
+
 def load_contact(contact_id)
   contact = session[:contacts].find { |contact| contact[:id] == contact_id }
   return contact if contact
 
-  session[:error] = "No such contact exisits."
-
+  session[:error] = "No such contact exists."
+  status 422
   redirect "/contacts"
 end
 
@@ -28,7 +87,6 @@ def next_contact_id(contacts)
   max_contact_id = contacts.map{ |contact| contact[:id]}.max || 0
   max_contact_id + 1
 end
-
 
 get "/" do
   erb :home, layout: :layout
@@ -63,7 +121,7 @@ post "/contacts" do
   email = params[:email].strip
   relation = params[:relation]
   # user input validation 
-  # no same first name + last name contact
+
   id = next_contact_id(session[:contacts])
   session[:contacts] << {id: id, firstname: firstname, lastname: lastname, phone: phone, email: email, relation: relation}
   session[:success] = "The contact has been added."
@@ -72,11 +130,110 @@ end
 
 # view single contact
 get "/contacts/:id" do
-  contact_id = params[:id].to_i
-  @contact = load_contact(contact_id)  # {id:1, firstname: "A", lastname: "S", phone: "122", email: "wwrr", relation: "Family"}
+  @contact_id = params[:id]
+  @contact = load_contact(@contact_id.to_i)
 
   erb :individual_contact, layout: :layout
 end
 
+# delete a contact
+post "/contacts/:id/delete" do
+  @contact_id = params[:id]
+  session[:contacts].delete_if {|contact| contact[:id] == @contact_id.to_i}
+  session[:success] = "The contact has been deleted."
+  redirect "/"
+end
 
+# render edit contact form
+get "/contacts/:id/edit" do
+  @contact_id = params[:id]
+  contact_info = load_contact(@contact_id.to_i)
+  @relations = CONTACT_CATEGORIES
+
+  @firstname = contact_info[:firstname]
+  @lastname = contact_info[:lastname]
+  @phone = contact_info[:phone]
+  @email = contact_info[:email]
+  
+  erb :edit, layout: :layout
+end
+
+# submit eidt contact form
+post "/contacts/:id/edit" do
+  contact_id = params[:id].to_i
+  contact = load_contact(contact_id)
+
+  firstname = params[:firstname].strip
+  lastname = params[:lastname].strip
+  phone = params[:phone].strip
+  email = params[:email].strip
+  relation = params[:relation]
+   # user input validation
+
+  new_contact_info = [contact_id, firstname, lastname, phone, email, relation]
+  contact.transform_values! {|value| value = new_contact_info.shift}
+  session[:success] = "The contact information has been updated."
+  redirect "/"
+end
+
+# render sign in form
+get "/users/signin" do
+  erb :signin, layout: :layout
+end
+
+# submit sign in form
+post "/users/signin" do
+  username = params[:username]
+  password = params[:password]
+
+  error = invalid_user_credentials(username, password)
+
+  if error
+    session[:error] = error
+    status 422
+    erb :signin, layout: :layout
+  else
+    session[:username] = username
+    session[:success] = "Welcome!"
+    redirect "/"
+  end
+end
+
+# submit sign out form
+post "/users/signout" do
+  session.delete(:username)
+  session[:success] = "You have been signed out."
+  redirect "/"
+end
+
+# render sign up form
+get "/users/signup" do
+  erb :signup, layout: :layout
+end
+
+# submit sign up form
+post "/users/signup" do
+  username = params[:username]
+  password = params[:password]
+  reconfirmed_password = params[:reconfirmed_password]
+
+  username_error = invalid_username(username)
+  password_error = invalid_password(password, reconfirmed_password)
+
+  if username_error
+    session[:error] = username_error
+    status 422
+    erb :signup, layout: :layout
+  elsif password_error
+    session[:error] = password_error
+    status 422
+    erb :signup, layout: :layout
+  else
+    hashed_password = hash_password(password)
+    store_user_credentials(username, hashed_password)
+    session[:username] = username
+    session[:success] = "Signed up successfully. Welcome!"
+    redirect "/"
+  end
+end
 

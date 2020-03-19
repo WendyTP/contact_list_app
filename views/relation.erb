@@ -1,4 +1,4 @@
-<p>You have # contacts:</p>
+<p>You have <%= count_contacts(@relation) %> contacts in <%= @relation %> group:</p>
 <% @contacts.each do |contact| %>
   <% next if contact[:relation] != @relation %>
   <ul>
@@ -7,3 +7,5 @@
     </li>
   </ul>
 <% end %>
+
+<a href="/">Back</a>

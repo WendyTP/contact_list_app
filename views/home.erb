@@ -11,6 +11,13 @@
 
 
 <% content_for :header_links do %>
-  <a class="signin" href=#>Sign in</a>
-  <a class="signup" href=#>Sign up</a>
+  <a class="signup" href="/users/signup">Sign up</a>
+  <% if session[:username]%>
+    <form class="signin" action="/users/signout" method="post">
+      <p class="user-status">Signed in as <%= session[:username] %></p>
+      <button type="submit">Sign out</button>
+    </form
+  <% else %>
+    <a class="signin" href="/users/signin">Sign in</a>
+  <% end %>
 <% end %>

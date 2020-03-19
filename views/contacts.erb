@@ -1,4 +1,4 @@
-<p>You have # contacts:</p>
+<p>You have <%= count_contacts %> contacts:</p>
 <% @contacts.each do |contact| %>
   <ul>
     <li>
@@ -6,3 +6,5 @@
     </li>
   </ul>
 <% end %>
+
+<a href="/">Back</a>

@@ -5,3 +5,9 @@
   <li>Email: <%= @contact[:email] %></li>
   <li>Relation: <%= @contact[:relation] %></li>
 </ul>
+
+<a href="/">Back</a>
+<a href="/contacts/<%= @contact_id %>/edit">Edit</a>
+<form class="inline" action="/contacts/<%= @contact_id %>/delete" method="post">
+  <button type="submit">Delete</button>
+</form>

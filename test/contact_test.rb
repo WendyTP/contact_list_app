@@ -1,7 +1,13 @@
+# To find a way to write tests for session data
+
+
+
 ENV["RACK_ENV"] = "test"
 
 require "minitest/autorun"
 require "rack/test"
+require "fileutils"
+require "yaml"
 
 require_relative "../contact"
 
@@ -13,12 +19,14 @@ class ContactTest < MiniTest::Test
   end
 
   def setup
-    # something
+    FileUtils.mkdir_p(data_path)
   end
 
   def teardown
-    #something
+    FileUtils.rm_rf(data_path)
   end
+
+  
 
   def test_index
     get "/"
