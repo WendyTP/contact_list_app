@@ -1,3 +1,7 @@
+###################################
+######  Configuration   ###########
+###################################
+
 require "sinatra"
 require "sinatra/reloader"
 require "sinatra/content_for"
@@ -16,6 +20,10 @@ end
 before do
   session[:contacts] ||= []
 end
+
+###################################
+#########  Methods  ###############
+###################################
 
 helpers do
   def count_contacts(relation=nil)
@@ -59,8 +67,8 @@ def invalid_username(username)
   user_credentials = load_user_credentials
   if user_credentials.has_key?(username)
     "Username already exisit."
-  elsif !username.match?(/\A\w{5,20}\z/)
-    "Invalid username."
+  elsif username.empty?
+    "Username can not be empty."
   end
 end
 
@@ -72,6 +80,17 @@ end
 
 def hash_password(password)
   BCrypt::Password.create(password).to_s
+end
+
+def signed_in?
+  session[:username]
+end
+
+def require_to_sign_in
+  unless signed_in?
+    session[:error]= "You must sign in to access."
+    redirect "/"
+  end
 end
 
 def load_contact(contact_id)
@@ -88,12 +107,38 @@ def next_contact_id(contacts)
   max_contact_id + 1
 end
 
+def invalid_name(firstname, lastname)
+  if firstname.empty? || !firstname.match(/\A[\w]+\z/)
+    "First Name is not valid."
+  elsif lastname.empty? || !lastname.match(/\A[\w]+\z/)
+    "Last Name is not valid."
+  end
+end
+
+def invalid_phone_number(phone)
+  unless phone.match(/^(\+|0(\s|\-|\.)?0|0)?((\s|\-|\.)?\d){9,13}$/)
+    "Phone number is not valid."
+  end
+end
+
+def invalid_email(email)
+  unless email.match(/^([a-zA-Z]|\d){1}((\.|_|\-)?([a-zA-Z]|\d))+@(([a-zA-Z]|\d){1})((\.|_|\-)?([a-zA-Z]|\d))*\.\w+$/)
+    "email is invalid."
+  end
+end
+
+
+###################################
+########    Routes   ##############
+###################################
+
 get "/" do
   erb :home, layout: :layout
 end
 
 # view all the contacts
 get "/contacts" do
+  require_to_sign_in
   @contacts = session[:contacts]
 
   erb :contacts, layout: :layout
@@ -101,6 +146,7 @@ end
 
 # view contacts of individual category
 get "/:relation" do
+  require_to_sign_in
   @contacts = session[:contacts]
   @relation = params[:relation]
 
@@ -109,27 +155,48 @@ end
 
 # render new contact form
 get "/contacts/new" do
+  require_to_sign_in
   @relations = CONTACT_CATEGORIES
   erb :new_contact, layout: :layout
 end
 
 # submit new contact form
 post "/contacts" do
+  @relations = CONTACT_CATEGORIES
   firstname = params[:firstname].strip
   lastname = params[:lastname].strip
   phone = params[:phone].strip
   email = params[:email].strip
   relation = params[:relation]
-  # user input validation 
 
-  id = next_contact_id(session[:contacts])
-  session[:contacts] << {id: id, firstname: firstname, lastname: lastname, phone: phone, email: email, relation: relation}
-  session[:success] = "The contact has been added."
-  redirect "/"
+  # user input validation
+  name_error = invalid_name(firstname, lastname)
+  phone_error = invalid_phone_number(phone)
+  email_error = invalid_email(email)
+
+  if name_error
+    session[:error] = name_error
+    status 422
+    erb :new_contact, layout: :layout
+  elsif phone_error
+    session[:error] = phone_error
+    status 422
+    erb :new_contact, layout: :layout
+  elsif email_error
+    session[:error] = email_error
+    status 422
+    erb :new_contact, layout: :layout
+  else
+    id = next_contact_id(session[:contacts])
+    session[:contacts] << {id: id, firstname: firstname, lastname: lastname, phone: phone, email: email, relation: relation}
+    session[:success] = "The contact has been added."
+    redirect "/"
+  end
 end
 
 # view single contact
 get "/contacts/:id" do
+  require_to_sign_in
   @contact_id = params[:id]
   @contact = load_contact(@contact_id.to_i)
 
@@ -138,6 +205,7 @@ end
 
 # delete a contact
 post "/contacts/:id/delete" do
+  require_to_sign_in
   @contact_id = params[:id]
   session[:contacts].delete_if {|contact| contact[:id] == @contact_id.to_i}
   session[:success] = "The contact has been deleted."
@@ -146,6 +214,7 @@ end
 
 # render edit contact form
 get "/contacts/:id/edit" do
+  require_to_sign_in
   @contact_id = params[:id]
   contact_info = load_contact(@contact_id.to_i)
   @relations = CONTACT_CATEGORIES
@@ -160,6 +229,7 @@ end
 
 # submit eidt contact form
 post "/contacts/:id/edit" do
+  require_to_sign_in
   contact_id = params[:id].to_i
   contact = load_contact(contact_id)
 
