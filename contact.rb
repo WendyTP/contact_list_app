@@ -9,12 +9,15 @@ require "tilt/erubis"
 require "yaml"
 require "bcrypt"
 
-
 CONTACT_CATEGORIES = [ "Family", "Colleagues", "Friends", "Acquaintances" ]
 
 configure do
   enable :sessions
   set :session_secret, "top secret"
+end
+
+configure do
+  set :erb, :escape_html => true
 end
 
 before do
