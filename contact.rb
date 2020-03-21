@@ -119,13 +119,13 @@ def invalid_name(firstname, lastname)
 end
 
 def invalid_phone_number(phone)
-  unless phone.match(/^(\+|0(\s|\-|\.)?0|0)?((\s|\-|\.)?\d){9,13}$/)
+  unless phone.empty? || phone.match(/^(\+|0(\s|\-|\.)?0|0)?((\s|\-|\.)?\d){9,13}$/)
     "Phone number is not valid."
   end
 end
 
 def invalid_email(email)
-  unless email.match(/^([a-zA-Z]|\d){1}((\.|_|\-)?([a-zA-Z]|\d))+@(([a-zA-Z]|\d){1})((\.|_|\-)?([a-zA-Z]|\d))*\.\w+$/)
+  unless email.empty? || email.match(/^([a-zA-Z]|\d){1}((\.|_|\-)?([a-zA-Z]|\d))+@(([a-zA-Z]|\d){1})((\.|_|\-)?([a-zA-Z]|\d))*\.\w+$/)
     "email is invalid."
   end
 end
@@ -233,6 +233,7 @@ end
 # submit eidt contact form
 post "/contacts/:id/edit" do
   require_to_sign_in
+  @relations = CONTACT_CATEGORIES
   contact_id = params[:id].to_i
   contact = load_contact(contact_id)
 
@@ -241,12 +242,29 @@ post "/contacts/:id/edit" do
   phone = params[:phone].strip
   email = params[:email].strip
   relation = params[:relation]
-   # user input validation
 
-  new_contact_info = [contact_id, firstname, lastname, phone, email, relation]
-  contact.transform_values! {|value| value = new_contact_info.shift}
-  session[:success] = "The contact information has been updated."
-  redirect "/"
+  name_error = invalid_name(firstname, lastname)
+  phone_error = invalid_phone_number(phone)
+  email_error = invalid_email(email)
+
+  if name_error
+    session[:error] = name_error
+    status 422
+    erb :new_contact, layout: :layout
+  elsif phone_error
+    session[:error] = phone_error
+    status 422
+    erb :new_contact, layout: :layout
+  elsif email_error
+    session[:error] = email_error
+    status 422
+    erb :new_contact, layout: :layout
+  else
+    new_contact_info = [contact_id, firstname, lastname, phone, email, relation]
+    contact.transform_values! {|value| value = new_contact_info.shift}
+    session[:success] = "The contact information has been updated."
+    redirect "/"
+  end
 end
 
 # render sign in form
